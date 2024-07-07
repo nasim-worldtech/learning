@@ -15,6 +15,10 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ColorColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 
 class PostResource extends Resource
@@ -27,14 +31,15 @@ class PostResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('name')->required(),
+                TextInput::make('title')->required(),
                 TextInput::make('slug')->required(),
                 MarkdownEditor::make('content')->required(),
-                FileUpload::make('thumbnail'),
+                FileUpload::make('thumbnail')->disk('public')->directory('thumnail'),
                 Select::make('category_id')
                     ->label('category')
                     ->options(Category::all()->pluck('name', 'id'))
-                    ->searchable(),
+                    ->searchable()
+                    ->required(),
                 Toggle::make('published')->required(),
                 TagsInput::make('tags')->required(),
                 ColorPicker::make('color')->required(),
@@ -45,7 +50,14 @@ class PostResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('id'),
+                TextColumn::make('title'),
+                TextColumn::make('slug'),
+                ColorColumn::make('color')->visibleFrom('md'),
+                ToggleColumn::make('published'),
+                TextColumn::make('tags'),
+                textColumn::make('category.name'),
+                ImageColumn::make('thumbnail')->disk('public'),
             ])
             ->filters([
                 //

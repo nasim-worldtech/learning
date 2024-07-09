@@ -7,7 +7,9 @@ use App\Models\Category;
 use App\Models\Post;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
@@ -31,19 +33,31 @@ class PostResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('title')->required(),
-                TextInput::make('slug')->required(),
-                MarkdownEditor::make('content')->required(),
-                FileUpload::make('thumbnail')->disk('public')->directory('thumnail'),
-                Select::make('category_id')
-                    ->label('category')
-                    ->options(Category::all()->pluck('name', 'id'))
-                    ->searchable()
-                    ->required(),
-                Toggle::make('published')->required(),
-                TagsInput::make('tags')->required(),
-                ColorPicker::make('color')->required(),
-            ]);
+                Section::make('Create a post')
+                    ->description('Create a new post here')
+                    ->schema([
+                        TextInput::make('title')->required(),
+                        TextInput::make('slug')->required()->unique(ignoreRecord: true),
+                        Select::make('category_id')
+                            ->label('category')
+                            ->options(Category::all()->pluck('name', 'id'))
+                            ->searchable()
+                            ->required(),
+                        ColorPicker::make('color')->required(),
+                        MarkdownEditor::make('content')->required()->columnSpanFull(),
+                    ])->columnSpan(2)->columns(2),
+                Group::make()->schema([
+                    Section::make('Image')
+                        ->collapsible()
+                        ->schema([
+                            FileUpload::make('thumbnail')->disk('public')->directory('thumnail'),
+                        ])->columnSpan(1),
+                    Section::make('Meta')->schema([
+                        TagsInput::make('tags')->required(),
+                        Toggle::make('published')->required(),
+                    ]),
+                ]),
+            ])->columns(3);
     }
 
     public static function table(Table $table): Table
@@ -51,19 +65,39 @@ class PostResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id'),
-                TextColumn::make('title'),
-                TextColumn::make('slug'),
-                ColorColumn::make('color')->visibleFrom('md'),
-                ToggleColumn::make('published'),
-                TextColumn::make('tags'),
-                textColumn::make('category.name'),
-                ImageColumn::make('thumbnail')->disk('public'),
+                TextColumn::make('title')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault : true),
+                TextColumn::make('slug')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
+                ColorColumn::make('color')
+                    ->toggleable(),
+                ToggleColumn::make('published')
+                    ->toggleable(),
+                TextColumn::make('tags')
+                    ->toggleable(),
+                TextColumn::make('category.name')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('created_at')
+                    ->label('publised at')
+                    ->sortable()
+                    ->searchable()
+                    ->date()->toggleable(),
+                ImageColumn::make('thumbnail')
+                    ->disk('public')
+                    ->toggleable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

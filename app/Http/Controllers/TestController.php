@@ -4,10 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\File;
 use Illuminate\Http\Request;
+use App\Jobs\SimpleLogMessage;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 class TestController extends Controller
 {
+    public function learningQueue()
+    {
+        // raw queue push pop
+        // Queue::pushRaw('test message', 'test');
+        // $job = Queue::pop('test');
+        // dd($job->getRawBody());
+
+        // worker -> php script
+        // php artisan queue:work // default queue
+        // php artisan queue:work --queue=email
+        // php artisan make:job SimpleLogMessage
+
+        // Using Jobs and Queues
+        // Queue::push(new SimpleLogMessage());
+        for($i=0;$i<10;$i++){
+            Queue::push(new SimpleLogMessage('ABC'));
+        }
+    }
     public function getForm()
     {
         $data['files'] = File::get();
@@ -45,9 +65,6 @@ class TestController extends Controller
         return redirect()->back()->with('success', 'Avatar uploaded successfully');
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         //

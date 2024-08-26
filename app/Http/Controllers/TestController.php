@@ -26,13 +26,13 @@ class TestController extends Controller
         // php artisan make:job SimpleLogMessage
 
         // Using Jobs and Queues
-        Queue::push(new SimpleLogMessage('ABC'));
-        dispatch(new SimpleLogMessage('DEF'));
+        // Queue::push(new SimpleLogMessage('ABC'));
+        // dispatch(new SimpleLogMessage('DEF'));
         Bus::dispatch(new SimpleLogMessage('GHI'));
-        SimpleLogMessage::dispatch('JKL');
+        SimpleLogMessage::dispatch('JKL')->onQueue('email');
 
-        // $post = Post::query()->first();
-        // NewPostNotification::dispatch($post)->onQueue('subscription');
+        $post = Post::query()->first();
+        NewPostNotification::dispatch($post)->onQueue('subscription');
     }
     public function getForm()
     {

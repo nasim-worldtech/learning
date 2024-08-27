@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
-use App\Models\Post;
+use App\Models\User;
+use App\Jobs\SendMailJob;
 use Illuminate\Http\Request;
 use App\Jobs\SimpleLogMessage;
-use App\Jobs\NewPostNotification;
-use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 class TestController extends Controller
@@ -28,11 +26,16 @@ class TestController extends Controller
         // Using Jobs and Queues
         // Queue::push(new SimpleLogMessage('ABC'));
         // dispatch(new SimpleLogMessage('DEF'));
-        Bus::dispatch(new SimpleLogMessage('GHI'));
-        SimpleLogMessage::dispatch('JKL')->onQueue('email');
+        // Bus::dispatch(new SimpleLogMessage('GHI'));
+        // SimpleLogMessage::dispatch('JKL')->onQueue('email');
 
-        $post = Post::query()->first();
-        NewPostNotification::dispatch($post)->onQueue('subscription');
+        // $post = Post::query()->first();
+        // NewPostNotification::dispatch($post)->onQueue('subscription');
+        $users = User::query()->get();
+        foreach ($users as $user) {
+            SendMailJob::dispatch($user);
+        }
+        dump('success');
     }
     public function getForm()
     {

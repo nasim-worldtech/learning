@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendMailJob;
 use App\Models\File;
 use App\Models\User;
-use App\Jobs\SendMailJob;
+use Illuminate\Bus\Batchable;
 use Illuminate\Http\Request;
-use App\Jobs\SimpleLogMessage;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 
 class TestController extends Controller
 {
+    use Batchable;
     public function learningQueue()
     {
         // raw queue push pop
@@ -31,10 +33,22 @@ class TestController extends Controller
 
         // $post = Post::query()->first();
         // NewPostNotification::dispatch($post)->onQueue('subscription');
-        $users = User::query()->get();
-        foreach ($users as $user) {
-            SendMailJob::dispatch($user);
-        }
+
+        // Initialize an empty array to hold the jobs
+        $jobs = [];
+
+        // Use chunking to handle large datasets efficiently
+        User::chunk(100, function ($users) use (&$jobs) {
+            foreach ($users as $user) {
+                $jobs[] = new SendMailJob($user);
+            }
+
+            // Dispatch the batch once the chunk processing is done
+            Bus::batch($jobs)
+                ->name('Send Mail Batch')
+                ->dispatch();
+        });
+
         dump('success');
     }
     public function getForm()
